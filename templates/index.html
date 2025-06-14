@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Feature Extractor</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px; }
+        #results { margin-top: 20px; }
+        .feature { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Upload MP3 to Analyze</h1>
+    <input type="file" id="fileInput" accept=".mp3" />
+    <button onclick="analyze()">Analyze</button>
+    
+    <div id="results" style="display: none;">
+        <h2>Results</h2>
+        <div class="feature"><b>Tempo:</b> <span id="tempo"></span> BPM</div>
+        <div class="feature"><b>Key (Chroma):</b> <span id="chroma"></span></div>
+        <div class="feature"><b>MFCCs (Avg):</b> <span id="mfcc"></span></div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files[0]) {
+                alert("Please select an MP3 file!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+
+                // Display results
+                document.getElementById('tempo').textContent = data.tempo.toFixed(2);
+                document.getElementById('chroma').textContent = data.chroma.map(x => x.toFixed(2)).join(', ');
+                document.getElementById('mfcc').textContent = data.mfcc.map(x => x.toFixed(2)).join(', ');
+                document.getElementById('results').style.display = 'block';
+            } catch (error) {
+                alert("Failed to process file: " + error);
+            }
+        }
+    </script>
+</body>
+</html>
